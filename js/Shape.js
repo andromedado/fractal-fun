@@ -25,16 +25,19 @@ Shape.prototype.getCenter = function () {
     return new Point(x / this.points.length, y / this.points.length);
 };
 
+Shape.prototype.calculateProportion = function () {
+    return 1 / 2;
+};
+
 Shape.prototype.fractify = function (ctx) {
     if (this.fractalInterval) {
         return this.fractalInterval;
     }
-    const self = this;
 
     let lastPoint = this.getCenter();
-    function thunk() {
-        let point = self.points.rand();
-        const resultPoint = lastPoint.proportionateJump(point, 1/(self.sides - 1));
+    const thunk = () => {
+        let point = this.points.rand();
+        const resultPoint = lastPoint.proportionateJump(point, this.calculateProportion());
         ctx.dot(resultPoint);
         lastPoint = resultPoint;
     }

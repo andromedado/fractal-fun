@@ -5,7 +5,6 @@ function Quadrilateral(points) {
 }
 Quadrilateral.prototype = new Shape();
 
-
 function Square(topLeftPoint, sideLength) {
     const points = [topLeftPoint];
     points.push(new Point(topLeftPoint.x + sideLength, topLeftPoint.y));

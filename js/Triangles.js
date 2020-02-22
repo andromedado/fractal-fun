@@ -22,8 +22,8 @@ EquilateralTriangle.prototype.getCenter = function () {
 */
 
 EquilateralTriangle.prototype.generatePoints = function () {
-    const rightPoint = new Point(topmostPoint.x + this.sidesLength / 2, topmostPoint.y + Math.sin(degToRad(60)) * this.sidesLength);
-    const leftPoint = new Point(topmostPoint.x - this.sidesLength / 2, topmostPoint.y + Math.sin(degToRad(60)) * this.sidesLength)
-    this.points = [topmostPoint, rightPoint, leftPoint];
+    const rightPoint = new Point(this.topmostPoint.x + this.sidesLength / 2, this.topmostPoint.y + Math.sin(degToRad(60)) * this.sidesLength);
+    const leftPoint = new Point(this.topmostPoint.x - this.sidesLength / 2, this.topmostPoint.y + Math.sin(degToRad(60)) * this.sidesLength)
+    this.points = [this.topmostPoint, rightPoint, leftPoint];
     return this.points;
 }
