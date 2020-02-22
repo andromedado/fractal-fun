@@ -4,6 +4,8 @@ function Shape(sides) {
     this.sides = sides || 3;
 }
 
+Shape.prototype.useCorners = true;
+
 Shape.prototype.draw = function (ctx) {
     ctx.fillStyle = '#000';
     ctx.beginPath();
@@ -29,19 +31,40 @@ Shape.prototype.calculateProportion = function () {
     return 1 / 2;
 };
 
+Shape.prototype.getPointsForFractify = function () {
+    if (this.useCorners) {
+        return this.points;
+    }
+    if (!this.sidePoints) {
+        this.sidePoints = [];
+        let lastPoint = this.points[0];
+        for (let i = 1; i <= this.points.length; i++) {
+            let point = this.points[i % this.points.length];
+            this.sidePoints.push(lastPoint.averageWith(point));
+            lastPoint = point;
+        }
+    }
+    if (this.allPoints) {
+        return this.points.concat(this.sidePoints);
+    }
+    return this.sidePoints;
+};
+
+Shape.prototype.getFractalIteration = function (ctx) {
+    let lastPoint = this.getCenter();
+    return () => {
+        let point = this.getPointsForFractify().rand();
+        const resultPoint = lastPoint.proportionateJump(point, this.calculateProportion());
+        ctx.dot(resultPoint);
+        lastPoint = resultPoint;
+    };
+};
+
 Shape.prototype.fractify = function (ctx) {
     if (this.fractalInterval) {
         return this.fractalInterval;
     }
-
-    let lastPoint = this.getCenter();
-    const thunk = () => {
-        let point = this.points.rand();
-        const resultPoint = lastPoint.proportionateJump(point, this.calculateProportion());
-        ctx.dot(resultPoint);
-        lastPoint = resultPoint;
-    }
-
+    const thunk = this.getFractalIteration(ctx);
     thunk();
     this.fractalInterval = setInterval(() => {
         thunk();
@@ -54,7 +77,6 @@ Shape.prototype.fractify = function (ctx) {
         thunk();
     }, 1);
     return this.fractalInterval;
-    /* */
 };
 
 Shape.prototype.stopFractal = function () {

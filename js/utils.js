@@ -35,10 +35,10 @@ Point.prototype.toString = function () {
     return `Point(${this.x}, ${this.y})`;
 };
 
-CanvasRenderingContext2D.prototype.dot = function dot (point) {
+CanvasRenderingContext2D.prototype.dot = function dot (point, size) {
     ctx.beginPath();
     ctx.fillStyle = '#000';
-    ctx.arc(point.x, point.y, 0.25, degToRad(0), degToRad(360), false);
+    ctx.arc(point.x, point.y, size || 0.25, degToRad(0), degToRad(360), false);
     ctx.fill();
 };
 
