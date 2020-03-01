@@ -131,7 +131,20 @@ Shape.prototype.getCenter = function () {
 };
 
 Shape.prototype.calculateProportion = function () {
-    return 0.55;
+    switch(this.points.length) {
+        case 3:
+            return 0.5;
+        case 4:
+            return 0.51;
+        case 5:
+            return 1 - 1 / (1 + ((1 + Math.pow(5, 0.5)) / 2));
+        case 6:
+            return 2/3;
+        default:
+            const x = this.points.length - 3;
+            const mx = 0.25;
+            return 0.5 + ((-1 * Math.pow(4 * x + (1/mx), -1)) + mx);
+    }
 };
 
 Shape.prototype.getPointsForFractify = function () {
