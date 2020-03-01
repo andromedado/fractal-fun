@@ -61,8 +61,8 @@ function ShapeTable (/* rows, columns | [shapes] */) {
     if (args[0] && args[0][0] instanceof Shape) {
         this.setShapes(args[0]);
     } else {
-        this.setNumRows(args.shift());
-        this.setNumColumns(args.shift());
+        this.setNumRows(args.shift(), true);
+        this.setNumColumns(args.shift(), true);
     }
 }
 
@@ -91,8 +91,8 @@ ShapeTable.prototype.setShapes = function (shapes) {
 
 ShapeTable.prototype.resize = function () {
     const side = Math.ceil(Math.sqrt(shapes.length));
-    this.setNumColumns(side);
-    this.setNumRows(side);
+    this.setNumColumns(side, true);
+    this.setNumRows(side, true);
     this.distributeShapes();
 };
 
@@ -138,19 +138,27 @@ ShapeTable.prototype.reAnchorShapes = function () {
             const shapeBox = new BoundingBox(cell.shape);
             const xD = (cell.width - shapeBox.width) / 2;
             const yD = (cell.height - shapeBox.height) / 2;
-            cell.shape.setAnchorPoint(cell.anchorPoint.shift(xD, yD));
+            cell.shape.setAnchorPoint(cell.anchorPoint.translate(xD, yD));
         }
     });
 };
 
-ShapeTable.prototype.setNumRows = function (numRows) {
+ShapeTable.prototype.setNumRows = function (numRows, quiet) {
     this.numRows = numRows;
+    if (this.shapes && !quiet) {
+        this.setNumColumns(Math.ceil(this.shapes.length / this.numRows), true);
+        this.distributeShapes();
+    }
 };
 
-ShapeTable.prototype.setNumColumns = function (numColumns) {
+ShapeTable.prototype.setNumColumns = function (numColumns, quiet) {
     this.numColumns = numColumns;
     for (let x = 0; x < this.numColumns; x++) {
         this.table[x] = this.table[x] || {};
+    }
+    if (this.shapes && !quiet) {
+        this.setNumRows(Math.ceil(this.shapes.length / this.numColumns), true);
+        this.distributeShapes();
     }
 };
 
@@ -197,4 +205,5 @@ ShapeTable.prototype.draw = function (ctx) {
         }
     });
 };
+
 

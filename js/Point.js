@@ -45,10 +45,6 @@ Point.prototype.getPoints = function () {
     return [this];
 };
 
-Point.prototype.shift = function (x, y) {
-    return new Point(this.x + x, this.y + y);
-};
-
 Point.prototype.averageWith = function (otherPoint) {
     return this.proportionateJump(otherPoint, 1/2);
 };
@@ -75,27 +71,19 @@ Point.prototype.distance = function (otherPoint) {
     return Math.sqrt(Math.pow(xDelta, 2) + Math.pow(yDelta, 2));
 };
 
+Point.prototype.translate = function (xD, yD) {
+    return new Point(this.x + xD, this.y + yD);
+};
+
+Point.prototype.delta = function (otherPoint) {
+    return [otherPoint.x - this.x, otherPoint.y - this.y];
+};
+
 Point.prototype.radialPoint = function (distance, theta) {
     while (theta < 0) theta += 360;
     theta = theta % 360;
-    //theta = 180-theta;
-    /*
-    let xOperand, yOperand;
-    if (theta < 90 || theta > 270) {
-        xOperand = 1;
-    } else {
-        xOperand = -1;
-    }
-    if (theta > 180) {
-        yOperand = -1;
-    } else {
-        yOperand = 1;
-    }
-    //*/
-
-    const xDelta = Math.cos(degToRad(theta)) * distance;/// * xOperand;
-    const yDelta = Math.sin(degToRad(theta)) * distance;// * yOperand;
-
+    const xDelta = Math.cos(degToRad(theta)) * distance;
+    const yDelta = Math.sin(degToRad(theta)) * distance;
     return new Point(this.x + xDelta, this.y + yDelta);
 
 };

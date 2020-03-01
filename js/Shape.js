@@ -31,10 +31,66 @@ function Shape(numSides) {
     }
 }
 
+Shape.prototype.useCorners = true;
 Shape.prototype.initialPoint = Point.origin();
+
+Shape.prototype.toString = function () {
+    let shape;
+    switch (this.points.length) {
+        case 2:
+            shape = 'LineSegment';
+            break;
+        case 3:
+            shape = 'Triangle';
+            break;
+        case 4:
+            shape = 'Quadrilateral';
+            break;
+        case 5:
+            shape = 'Pentagon';
+            break;
+        case 6:
+            shape = 'Hexagon';
+            break;
+        case 7:
+            shape = 'Heptagon';
+            break;
+        case 8:
+            shape = 'Octagon';
+            break;
+        case 9:
+            shape = 'Nonagon';
+            break;
+        case 10:
+            shape = 'Decagon';
+            break;
+        case 11:
+            shape = 'Hendecagon';
+            break;
+        case 12:
+            shape = 'Dodecagon';
+            break;
+        default:
+            shape = `Polygon(${this.points.length})`;
+    }
+    if (this.sideLength) {
+        shape = `${shape}<${this.sideLength.toFixed(1)}>`;
+    }
+    return shape;
+};
+
+Shape.prototype.clone = function () {
+    return new Shape(this.numSides, this.points);
+};
 
 Shape.prototype.getPoints = function () {
     return this.points;
+};
+
+Shape.prototype._clearCache = function () {
+    this.sideSegments = void 0;
+    this.anchorPoint = void 0;
+    this.sidePoints = void 0;
 };
 
 Shape.prototype.getSideSegments = function () {
@@ -88,6 +144,29 @@ Shape.prototype.getAnchorPoint = function () {
     return this.anchorPoint;
 };
 
+Shape.prototype.scaleTo = function (proportion) {
+    let anchorPoint = this.getAnchorPoint();
+    this.points = this.points.map((point) => {
+        return new Point(point.x * proportion, point.y * proportion);
+    });
+    this._clearCache();
+    this.setAnchorPoint(anchorPoint);
+};
+
+Shape.prototype.translate = function (xD, yD) {
+    this.points = this.points.map((p) => p.translate(xD, yD));
+    this._clearCache();
+};
+
+Shape.prototype.alignPointTo = function (myPointIndex, otherPoint) {
+    if (myPointIndex >= this.points.length) {
+        throw new Error(`Bad point index: ${myPointIndex}`);
+    }
+    const myPoint = this.points[myPointIndex];
+    const [xD, yD] = myPoint.delta(otherPoint);
+    this.translate(xD, yD);
+};
+
 Shape.prototype.setAnchorPoint = function (anchorPoint) {
     let myPoint = this.getAnchorPoint();
     let xD = anchorPoint.x - myPoint.x;
@@ -95,10 +174,9 @@ Shape.prototype.setAnchorPoint = function (anchorPoint) {
     this.points = this.points.map(p => {
         return new Point(p.x + xD, p.y + yD);
     });
+    this._clearCache();
     this.anchorPoint = anchorPoint;
 };
-
-Shape.prototype.useCorners = true;
 
 Shape.prototype.draw = function (ctx) {
     ctx.fillStyle = '#000';
@@ -130,20 +208,45 @@ Shape.prototype.getCenter = function () {
     return new Point(x / this.points.length, y / this.points.length);
 };
 
-Shape.prototype.calculateProportion = function () {
+Shape.prototype.calculateProportion = function (ctx) {
     switch(this.points.length) {
+        case 4:
+            return 0.51;//Special Case
+        /*
         case 3:
             return 0.5;
-        case 4:
-            return 0.51;
         case 5:
             return 1 - 1 / (1 + ((1 + Math.pow(5, 0.5)) / 2));
         case 6:
             return 2/3;
+            */
         default:
-            const x = this.points.length - 3;
-            const mx = 0.25;
-            return 0.5 + ((-1 * Math.pow(4 * x + (1/mx), -1)) + mx);
+            if (!this._proportion) {
+                const fitter = new Fitter(0.5);
+                fitter.fitTo((proportion) => {
+                    this.miniOne = this.clone();
+                    this.miniTwo = this.clone();
+                    this.miniOne.scaleTo(proportion);
+                    this.miniOne.alignPointTo(0, this.points[0]);
+                    this.miniTwo.scaleTo(proportion);
+                    this.miniTwo.alignPointTo(1, this.points[1]);
+                    if (ctx) {
+                        this.miniOne.draw(ctx);
+                        this.miniTwo.draw(ctx);
+                    }
+                    if (this.miniOne.intersectsWith(this.miniTwo)) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                });
+                this._proportion = 1 - fitter.value;
+                console.log(`${this} has a fractal proportion of ${fitter.value}`);
+                // const x = this.points.length - 3;
+                // const mx = 0.25;
+                // this._proportion = 0.5 + ((-1 * Math.pow(4 * x + (1/mx), -1)) + mx);
+            }
+            return this._proportion;
     }
 };
 
@@ -178,10 +281,11 @@ Shape.prototype.getFractalIteration = function (ctx) {
     };
 };
 
-Shape.prototype.fractify = function (ctx) {
+Shape.prototype.fractify = function (ctx, limit) {
     if (this.fractalInterval) {
         return this.fractalInterval;
     }
+    limit = limit || Math.pow(10, 5);
     const thunk = this.getFractalIteration(ctx);
     thunk();
     this.fractalInterval = setInterval(() => {
@@ -193,7 +297,7 @@ Shape.prototype.fractify = function (ctx) {
         thunk();
         thunk();
         thunk();
-        if (this.i > Math.pow(10, 5)) {
+        if (this.i > limit) {
             this.stopFractal();
         }
     }, 1);

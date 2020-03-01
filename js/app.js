@@ -9,15 +9,27 @@ const padding = 10;
 const length = 700;
 const shapes = [];
 
-for (let i = 3; i < 11; i++) {
+for (let i = 3; i < 14; i++) {
     shapes.push(new Shape(i, length / i));
 }
 shapes.push(new Square(Point.origin(), length / 4));
 
 const table = new ShapeTable(shapes);
 table.setAnchorPoint(new Point(padding, padding));
+table.setNumColumns(4);
 
 table.draw(ctx);
+
+/*
+let smaller = shapes[2].clone();
+smaller.scaleTo(0.4);
+smaller.alignPointTo(1, shapes[2].points[1]);
+let otherSmall = smaller.clone();
+otherSmall.alignPointTo(0, shapes[2].points[0]);
+
+smaller.draw(ctx);
+otherSmall.draw(ctx);
+/**/
 
 shapes.forEach(s => {
     s.fractify(ctx);
